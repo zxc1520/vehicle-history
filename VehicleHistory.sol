@@ -2,10 +2,11 @@
 pragma solidity ^0.8.24;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 
 contract VehicleHistory is Ownable {
 
-    enum IssuerRole { None, Garage, Insurance, Dealer, Notary }
+    enum IssuerRole { None, Workshop, Insurance, Dealer, Notary }
     
     struct ServiceRecord {
         uint256 timestamp;
@@ -33,12 +34,22 @@ contract VehicleHistory is Ownable {
     mapping(bytes32 => IncidentRecord[]) public incidentHistory;
     mapping(bytes32 => address[]) public ownershipHistory;
 
+    // ===== Merkle allowlist =====
+    bytes32 public allowlistRoot;                  
+    string public allowlistURI;                   
+    mapping(bytes32 => bool) public leafUsed;
+    mapping(address => bytes32) public issuerDocHash;
+
     event IssuerRoleSet(address indexed issuer, IssuerRole role);
     event VehicleRegistered(bytes32 indexed vinHash, address indexed initialOwner, uint256 initialMileage);
     event ServiceAdded(bytes32 indexed vinHash, uint256 mileage, address indexed issuer);
     event IncidentAdded(bytes32 indexed vinHash, string incidentType, address indexed issuer);
     event MileageCorrected(bytes32 indexed vinHash, uint256 newMileage, string reason, address indexed correctedBy);
     event OwnershipTransferred(bytes32 indexed vinHash, address indexed from, address indexed to);
+
+    event AllowlistUpdated(bytes32 indexed root, string uri);
+    event RoleClaimed(address indexed issuer, IssuerRole role, bytes32 docHash);
+    event RoleRevoked(address indexed issuer);
 
     constructor() Ownable(msg.sender) {}
 
@@ -47,9 +58,53 @@ contract VehicleHistory is Ownable {
         _;
     }
 
-    function setIssuerRole(address issuer, IssuerRole role) external onlyOwner {
-        authorizedIssuers[issuer] = role;
-        emit IssuerRoleSet(issuer, role);
+    function setAllowlist(bytes32 root, string calldata uri) external onlyOwner {
+        allowlistRoot = root;
+        allowlistURI = uri;
+
+        emit AllowlistUpdated(root, uri);
+    }
+
+    function _leaf(address account, IssuerRole role, bytes32 docHash) internal pure returns (bytes32) {
+        return keccak256(bytes.concat(keccak256(abi.encode(account, uint8(role), docHash))));
+    }
+
+    function verifyClaim(address account, IssuerRole role, bytes32 docHash, bytes32[] calldata proof)
+        public
+        view
+        returns (bool ok, string memory reason)
+    {
+        if (allowlistRoot == bytes32(0)) return (false, "Allowlist not set");
+        if (role == IssuerRole.None) return (false, "Invalid role");
+        if (authorizedIssuers[account] != IssuerRole.None) return (false, "Address already has a role");
+
+        bytes32 leaf = _leaf(account, role, docHash);
+        if (leafUsed[leaf]) return (false, "Claim already used");
+        if (!MerkleProof.verifyCalldata(proof, allowlistRoot, leaf)) return (false, "Invalid proof");
+
+        return (true, "");
+    }
+
+    function claimRole(IssuerRole role, bytes32 docHash, bytes32[] calldata proof) external {
+        (bool ok, string memory reason) = verifyClaim(msg.sender, role, docHash, proof);
+        require(ok, reason);
+
+        leafUsed[_leaf(msg.sender, role, docHash)] = true;
+        authorizedIssuers[msg.sender] = role;
+        issuerDocHash[msg.sender] = docHash;
+
+        emit IssuerRoleSet(msg.sender, role);
+        emit RoleClaimed(msg.sender, role, docHash);
+    }
+
+    function revokeRole(address issuer) external onlyOwner {
+        require(authorizedIssuers[issuer] != IssuerRole.None, "No active role");
+
+        authorizedIssuers[issuer] = IssuerRole.None;
+        delete issuerDocHash[issuer];
+
+        emit IssuerRoleSet(issuer, IssuerRole.None);
+        emit RoleRevoked(issuer);
     }
 
     /**
@@ -74,7 +129,7 @@ contract VehicleHistory is Ownable {
         bytes32 vinHash,
         uint256 mileage,
         string calldata description
-    ) external onlyIssuer(IssuerRole.Garage) {
+    ) external onlyIssuer(IssuerRole.Workshop) {
         require(vehicles[vinHash].exists, "Vehicle not found !");
         require(mileage >= vehicles[vinHash].lastMileage, "The mileage cannot be lower than the last recorded entry.");
 

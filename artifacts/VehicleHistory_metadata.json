@@ -38,6 +38,25 @@
 					{
 						"indexed": true,
 						"internalType": "bytes32",
+						"name": "root",
+						"type": "bytes32"
+					},
+					{
+						"indexed": false,
+						"internalType": "string",
+						"name": "uri",
+						"type": "string"
+					}
+				],
+				"name": "AllowlistUpdated",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "bytes32",
 						"name": "vinHash",
 						"type": "bytes32"
 					},
@@ -156,6 +175,44 @@
 				"inputs": [
 					{
 						"indexed": true,
+						"internalType": "address",
+						"name": "issuer",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "enum VehicleHistory.IssuerRole",
+						"name": "role",
+						"type": "uint8"
+					},
+					{
+						"indexed": false,
+						"internalType": "bytes32",
+						"name": "docHash",
+						"type": "bytes32"
+					}
+				],
+				"name": "RoleClaimed",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "issuer",
+						"type": "address"
+					}
+				],
+				"name": "RoleRevoked",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
 						"internalType": "bytes32",
 						"name": "vinHash",
 						"type": "bytes32"
@@ -248,6 +305,32 @@
 				"type": "function"
 			},
 			{
+				"inputs": [],
+				"name": "allowlistRoot",
+				"outputs": [
+					{
+						"internalType": "bytes32",
+						"name": "",
+						"type": "bytes32"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "allowlistURI",
+				"outputs": [
+					{
+						"internalType": "string",
+						"name": "",
+						"type": "string"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
 				"inputs": [
 					{
 						"internalType": "address",
@@ -264,6 +347,29 @@
 					}
 				],
 				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "enum VehicleHistory.IssuerRole",
+						"name": "role",
+						"type": "uint8"
+					},
+					{
+						"internalType": "bytes32",
+						"name": "docHash",
+						"type": "bytes32"
+					},
+					{
+						"internalType": "bytes32[]",
+						"name": "proof",
+						"type": "bytes32[]"
+					}
+				],
+				"name": "claimRole",
+				"outputs": [],
+				"stateMutability": "nonpayable",
 				"type": "function"
 			},
 			{
@@ -366,6 +472,44 @@
 			{
 				"inputs": [
 					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"name": "issuerDocHash",
+				"outputs": [
+					{
+						"internalType": "bytes32",
+						"name": "",
+						"type": "bytes32"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "bytes32",
+						"name": "",
+						"type": "bytes32"
+					}
+				],
+				"name": "leafUsed",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
 						"internalType": "bytes32",
 						"name": "vinHash",
 						"type": "bytes32"
@@ -456,6 +600,19 @@
 			{
 				"inputs": [
 					{
+						"internalType": "address",
+						"name": "issuer",
+						"type": "address"
+					}
+				],
+				"name": "revokeRole",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
 						"internalType": "bytes32",
 						"name": "",
 						"type": "bytes32"
@@ -495,17 +652,17 @@
 			{
 				"inputs": [
 					{
-						"internalType": "address",
-						"name": "issuer",
-						"type": "address"
+						"internalType": "bytes32",
+						"name": "root",
+						"type": "bytes32"
 					},
 					{
-						"internalType": "enum VehicleHistory.IssuerRole",
-						"name": "role",
-						"type": "uint8"
+						"internalType": "string",
+						"name": "uri",
+						"type": "string"
 					}
 				],
-				"name": "setIssuerRole",
+				"name": "setAllowlist",
 				"outputs": [],
 				"stateMutability": "nonpayable",
 				"type": "function"
@@ -569,6 +726,45 @@
 				],
 				"stateMutability": "view",
 				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "account",
+						"type": "address"
+					},
+					{
+						"internalType": "enum VehicleHistory.IssuerRole",
+						"name": "role",
+						"type": "uint8"
+					},
+					{
+						"internalType": "bytes32",
+						"name": "docHash",
+						"type": "bytes32"
+					},
+					{
+						"internalType": "bytes32[]",
+						"name": "proof",
+						"type": "bytes32[]"
+					}
+				],
+				"name": "verifyClaim",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "ok",
+						"type": "bool"
+					},
+					{
+						"internalType": "string",
+						"name": "reason",
+						"type": "string"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
 			}
 		],
 		"devdoc": {
@@ -606,7 +802,7 @@
 	},
 	"settings": {
 		"compilationTarget": {
-			"VinChain.sol": "VehicleHistory"
+			"VehicleHistory.sol": "VehicleHistory"
 		},
 		"evmVersion": "osaka",
 		"libraries": {},
@@ -636,12 +832,28 @@
 				"dweb:/ipfs/Qmax9WHBnVsZP46ZxEMNRQpLQnrdE4dK8LehML1Py8FowF"
 			]
 		},
-		"VinChain.sol": {
-			"keccak256": "0xb74347ea0e9e26aeb001bf26f5697f242a1bc6074bbbe55e331644ee768ad23e",
+		"@openzeppelin/contracts/utils/cryptography/Hashes.sol": {
+			"keccak256": "0x8cbd338f083224b4b6f0ff42cbda641a0a6c31ffcdca197452b97fe4d0918269",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://b0ef25c0c5a5a83fefb01a578a9926a68356fab8499c0e2a4d6ad8ad9abe1f71",
-				"dweb:/ipfs/QmcB4HkcbArND6huwPSsds2NxYj3yYBoY2raims68qL6YY"
+				"bzz-raw://f517dec5ba0c6491395acbf7f1d621f4e89e8f218bf5303c867b1c5ad70c6b11",
+				"dweb:/ipfs/QmWmXHRLEw8W6ckth7NyYTU88YfvuS7xSsfae5ksL8qNUe"
+			]
+		},
+		"@openzeppelin/contracts/utils/cryptography/MerkleProof.sol": {
+			"keccak256": "0x5e27273c7ebdbcfe7d2bad2866feb635a49db139abfe5643bdeacec4a0880225",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://715bf6d5198cacf619202a75333205b19ff267f14d40daa2f7afa363580b3c95",
+				"dweb:/ipfs/QmZ5kVidhB3q767655WSqgsz6YBTop1tVo7akzEDRb2PQr"
+			]
+		},
+		"VehicleHistory.sol": {
+			"keccak256": "0x18c9cfbae68087325ffd7af0a353c0e68ada4e4877f5aca927638a4544bc6493",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://fb08a4f409039d5560b450d8b5f8c5c515efb4b63682c396812fc741c27462f3",
+				"dweb:/ipfs/QmfNYXEdomTtVPqMqqUn1jeAAvoSErjKbF8anKFGAo4nLf"
 			]
 		}
 	},
